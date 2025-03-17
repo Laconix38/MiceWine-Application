@@ -125,6 +125,48 @@
                 android:layout_marginTop="8dp">
             </Spinner>
 
+            <LinearLayout
+                android:id="@+id/customDisplayResolutionLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <EditText
+                    android:id="@+id/editTextCustomWidth"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:importantForAutofill="no"
+                    android:inputType="number"
+                    android:hint="Width"
+                    tools:ignore="LabelFor,HardcodedText">
+                </EditText>
+
+                <TextView
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:text="x"
+                    tools:ignore="HardcodedText">
+                </TextView>
+
+                <EditText
+                    android:id="@+id/editTextCustomHeight"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:importantForAutofill="no"
+                    android:inputType="number"
+                    android:hint="Height"
+                    tools:ignore="LabelFor,HardcodedText">
+                </EditText>
+
+            </LinearLayout>
+
             <TextView
                 android:layout_marginTop="16dp"
                 android:layout_width="match_parent"

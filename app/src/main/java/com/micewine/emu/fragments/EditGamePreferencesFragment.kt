@@ -10,6 +10,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.View
+import android.view.View.OnFocusChangeListener
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.AdapterView.OnItemSelectedListener
@@ -18,6 +19,7 @@ import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.SpinnerAdapter
 import android.widget.TextView
@@ -86,6 +88,9 @@ class EditGamePreferencesFragment(private val type: Int, private val exePath: Fi
         val buttonCancel = view.findViewById<Button>(R.id.buttonCancel)
         val selectedDisplayModeSpinner = view.findViewById<Spinner>(R.id.selectedDisplayMode)
         val selectedDisplayResolutionSpinner = view.findViewById<Spinner>(R.id.selectedDisplayResolution)
+        val customDisplayResolutionLayout = view.findViewById<LinearLayout>(R.id.customDisplayResolutionLayout)
+        val editTextCustomWidth = view.findViewById<EditText>(R.id.editTextCustomWidth)
+        val editTextCustomHeight = view.findViewById<EditText>(R.id.editTextCustomHeight)
         val selectedDriverSpinner = view.findViewById<Spinner>(R.id.selectedDriver)
         val selectedD3DXRendererSpinner = view.findViewById<Spinner>(R.id.selectedD3DXRenderer)
         val selectedDXVKSpinner = view.findViewById<Spinner>(R.id.selectedDXVK)
@@ -161,7 +166,7 @@ class EditGamePreferencesFragment(private val type: Int, private val exePath: Fi
         val box64ProfilesNames: List<String> = getBox64Presets().map { it[0] }
 
         selectedDisplayModeSpinner.apply {
-            val aspectRatios = listOf("16:9", "4:3", "Native")
+            val aspectRatios = listOf("16:9", "4:3", "Native", "Custom")
             val displaySettings = getDisplaySettings(selectedGameName)
 
             adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, aspectRatios)
@@ -175,24 +180,39 @@ class EditGamePreferencesFragment(private val type: Int, private val exePath: Fi
                     id: Long
                 ) {
                     val selectedItem = parent?.getItemAtPosition(position).toString()
-                    var resolutionList: Array<String>? = null
 
-                    when (selectedItem) {
-                        "16:9" -> {
-                            resolutionList = resolutions16_9
+                    if (selectedItem == "Custom") {
+                        selectedDisplayResolutionSpinner.visibility = View.GONE
+                        customDisplayResolutionLayout.visibility = View.VISIBLE
+
+                        val displayResolution = displaySettings[1].split("x")
+                        if (displayResolution.size == 2) {
+                            editTextCustomWidth.setText(displayResolution[0])
+                            editTextCustomHeight.setText(displayResolution[1])
+                        }
+                    } else {
+                        var resolutionList: Array<String>? = null
+
+                        when (selectedItem) {
+                            "16:9" -> {
+                                resolutionList = resolutions16_9
+                            }
+
+                            "4:3" -> {
+                                resolutionList = resolutions4_3
+                            }
+
+                            "Native" -> {
+                                resolutionList = getNativeResolutions(requireActivity()).toTypedArray()
+                            }
                         }
 
-                        "4:3" -> {
-                            resolutionList = resolutions4_3
-                        }
+                        customDisplayResolutionLayout.visibility = View.GONE
+                        selectedDisplayResolutionSpinner.visibility = View.VISIBLE
 
-                        "Native" -> {
-                            resolutionList = getNativeResolutions(requireActivity()).toTypedArray()
-                        }
+                        selectedDisplayResolutionSpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, resolutionList!!)
+                        selectedDisplayResolutionSpinner.setSelection(resolutionList.indexOf(displaySettings[1]))
                     }
-
-                    selectedDisplayResolutionSpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, resolutionList!!)
-                    selectedDisplayResolutionSpinner.setSelection(resolutionList.indexOf(displaySettings[1]))
 
                     putDisplaySettings(selectedGameName, selectedItem, getDisplaySettings(selectedGameName)[1])
                 }
@@ -219,6 +239,20 @@ class EditGamePreferencesFragment(private val type: Int, private val exePath: Fi
                 }
             }
         }
+
+        val onEditCustomDisplayResolution = object : OnFocusChangeListener {
+            override fun onFocusChange(p0: View?, hasFocus: Boolean) {
+                if (!hasFocus) {
+                    val customWidth = editTextCustomWidth.text.trim().toString()
+                    val customHeight = editTextCustomHeight.text.trim().toString()
+                    if (customWidth.isNotEmpty() && customHeight.isNotEmpty()) {
+                        putDisplaySettings(selectedGameName, "Custom", customWidth + "x" + customHeight)
+                    }
+                }
+            }
+        }
+        editTextCustomWidth.onFocusChangeListener = onEditCustomDisplayResolution
+        editTextCustomHeight.onFocusChangeListener = onEditCustomDisplayResolution
 
         val vulkanDriversId = File("$appRootDir/packages").listFiles()?.filter { it.name.startsWith("VulkanDriver-") }?.mapNotNull { it.name }!!
 
@@ -448,7 +482,11 @@ class EditGamePreferencesFragment(private val type: Int, private val exePath: Fi
                     putExtra("exeArguments", editTextArguments.text.toString())
                     putExtra("driverName", vulkanDriversId[selectedDriverSpinner.selectedItemPosition])
                     putExtra("box64Preset", selectedBox64ProfileSpinner.selectedItem.toString())
-                    putExtra("displayResolution", selectedDisplayResolutionSpinner.selectedItem.toString())
+                    putExtra("displayResolution",
+                        if (selectedDisplayModeSpinner.selectedItem.toString().equals("Custom"))
+                            editTextCustomWidth.text.trim().toString() + "x" + editTextCustomHeight.text.trim().toString()
+                        else
+                            selectedDisplayResolutionSpinner.selectedItem.toString())
                     putExtra("virtualControllerPreset", selectedVirtualControllerProfileSpinner.selectedItem.toString())
                     putExtra("controllerPreset", selectedControllerProfileSpinner.selectedItem.toString())
                     putExtra("d3dxRenderer", selectedD3DXRendererSpinner.selectedItem.toString())
