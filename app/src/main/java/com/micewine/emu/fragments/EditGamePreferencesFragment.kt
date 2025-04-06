@@ -228,7 +228,7 @@ class EditGamePreferencesFragment(private val type: Int, private val exePath: Fi
                     selectedDisplayResolutionSpinner.setSelection(resolutionList.indexOf(displaySettings[1]))
 
                     temporarySettings.displayMode = selectedItem
-                    temporarySettings.displayResolution = getDisplaySettings(selectedGameName)[1]
+                    temporarySettings.displayResolution = selectedDisplayResolutionSpinner.selectedItem
                 }
 
                 override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -245,7 +245,7 @@ class EditGamePreferencesFragment(private val type: Int, private val exePath: Fi
                 ) {
                     val selectedItem = parent?.getItemAtPosition(position).toString()
 
-                    temporarySettings.displayMode = getDisplaySettings(selectedGameName)[0]
+                    temporarySettings.displayMode = selectedDisplayModeSpinner.selectedItem
                     temporarySettings.displayResolution = selectedItem
                 }
 
